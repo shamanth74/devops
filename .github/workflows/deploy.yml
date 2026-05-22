@@ -1,0 +1,95 @@
+name: CI/CD Deployment Pipeline
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  build-and-request-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install Backend Dependencies
+        working-directory: ./backend
+        run: npm install
+
+      - name: Install Frontend Dependencies
+        working-directory: ./frontend
+        run: npm install
+
+      - name: Build Frontend
+        working-directory: ./frontend
+        run: npm run build
+
+      - name: Build Docker Images
+        run: docker-compose build
+
+      - name: Get Changed Files
+        id: changes
+        run: |
+          FILES=$(git diff --name-only HEAD~1 HEAD | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          echo "files=$FILES" >> $GITHUB_OUTPUT
+
+      - name: Get Commit Info
+        id: commit
+        run: |
+          echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
+          echo "message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
+          echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
+
+      - name: Create Deployment Request
+        id: deploy_request
+        env:
+          API_URL: ${{ vars.API_URL || 'http://localhost:5000' }}
+        run: |
+          RESPONSE=$(curl -s -X POST "$API_URL/api/deployments" \
+            -H "Content-Type: application/json" \
+            -d '{
+              "branch": "${{ steps.commit.outputs.branch }}",
+              "commitMessage": "${{ steps.commit.outputs.message }}",
+              "commitSha": "${{ steps.commit.outputs.sha }}",
+              "changedFiles": ${{ steps.changes.outputs.files }},
+              "buildId": "build-${{ github.run_number }}"
+            }')
+          echo "Deployment request created: $RESPONSE"
+          DEPLOY_ID=$(echo $RESPONSE | jq -r '.id')
+          echo "id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+
+      - name: Wait for Approval
+        env:
+          API_URL: ${{ vars.API_URL || 'http://localhost:5000' }}
+        run: |
+          echo "Waiting for deployment approval..."
+          echo "Approve at: $API_URL (Dashboard)"
+          for i in $(seq 1 60); do
+            STATUS=$(curl -s "$API_URL/api/deployments/${{ steps.deploy_request.outputs.id }}" | jq -r '.status')
+            echo "Attempt $i: Status = $STATUS"
+            if [ "$STATUS" = "approved" ]; then
+              echo "Deployment approved!"
+              exit 0
+            elif [ "$STATUS" = "rejected" ]; then
+              echo "Deployment rejected."
+              exit 1
+            fi
+            sleep 10
+          done
+          echo "Approval timeout after 10 minutes."
+          exit 1
+
+      - name: Deploy Container
+        env:
+          API_URL: ${{ vars.API_URL || 'http://localhost:5000' }}
+        run: |
+          curl -s -X PUT "$API_URL/api/deployments/${{ steps.deploy_request.outputs.id }}/deploy"
+          docker-compose up -d
+          echo "Deployment complete!"

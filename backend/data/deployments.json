@@ -1,0 +1,42 @@
+[
+  {
+    "id": "fa1b742f-7d9d-4c41-84eb-c1a983c4cf53",
+    "branch": "main",
+    "commitMessage": "feat: add user authentication",
+    "commitSha": "a1b2c3d4e5f6",
+    "changedFiles": [
+      "src/App.jsx",
+      "src/Login.jsx",
+      "src/api/auth.js"
+    ],
+    "changedFilesCount": 3,
+    "buildId": "build-42",
+    "status": "deployed",
+    "safetyLabel": "Safe",
+    "dockerfileChanged": false,
+    "configFilesChanged": false,
+    "createdAt": "2026-05-22T13:18:15.873Z",
+    "updatedAt": "2026-05-22T13:19:26.905Z",
+    "deployedAt": "2026-05-22T13:19:26.905Z"
+  },
+  {
+    "id": "faddc7bf-df3a-4692-aa09-bbff43fa7252",
+    "branch": "feature/docker-update",
+    "commitMessage": "chore: update Dockerfile and docker-compose",
+    "commitSha": "b2c3d4e5f6a7",
+    "changedFiles": [
+      "Dockerfile",
+      "docker-compose.yml",
+      "src/config.js",
+      "README.md"
+    ],
+    "changedFilesCount": 4,
+    "buildId": "build-43",
+    "status": "pending",
+    "safetyLabel": "Needs Review",
+    "dockerfileChanged": true,
+    "configFilesChanged": true,
+    "createdAt": "2026-05-22T13:18:28.074Z",
+    "updatedAt": "2026-05-22T13:18:28.074Z"
+  }
+]
