@@ -213,6 +213,7 @@ app.post('/api/deployments', (req, res) => {
     commitSha,                                             // Commit hash
     changedFiles,                                          // List of changed file paths
     changedFilesCount: changedFiles.length,                 // Handy count
+    linesChanged: linesChanged || 0,                        // Number of lines changed
     buildId,                                               // CI build identifier
     status: 'pending',                                     // Starts as pending
     safetyLabel: computeSafetyLabel(changedFiles, linesChanged || 0), // Computed risk label
