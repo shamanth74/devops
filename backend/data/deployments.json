@@ -58,5 +58,25 @@
     "createdAt": "2026-05-22T17:39:29.996Z",
     "updatedAt": "2026-05-22T17:39:50.995Z",
     "deployedAt": "2026-05-22T17:39:50.995Z"
+  },
+  {
+    "id": "25538def-77a3-46cb-9619-6090d46b2139",
+    "branch": "main",
+    "commitMessage": "changes-1",
+    "commitSha": "ef901327db750c0a63fa5d3bbf9ce9b915286349",
+    "changedFiles": [
+      ".github/workflows/deploy.yml",
+      "backend/data/deployments.json",
+      "sample-app/index.js"
+    ],
+    "changedFilesCount": 3,
+    "buildId": "build-4",
+    "status": "deployed",
+    "safetyLabel": "Needs Review",
+    "dockerfileChanged": false,
+    "configFilesChanged": true,
+    "createdAt": "2026-05-22T17:46:52.852Z",
+    "updatedAt": "2026-05-22T17:47:15.057Z",
+    "deployedAt": "2026-05-22T17:47:15.057Z"
   }
 ]
