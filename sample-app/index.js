@@ -28,7 +28,7 @@ app.get('/', (req, res) => {
     <body>
       <div class="card">
         <h1>🚀 Sample App</h1>
-        <p>Deploying using docker try 1</p>
+        <p>This is sample deployment</p>
         <span class="version">v1.1.2</span>
       </div>
     </body>
