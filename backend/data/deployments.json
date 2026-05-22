@@ -20,5 +20,24 @@
     "configFilesChanged": true,
     "createdAt": "2026-05-22T18:49:49.210Z",
     "updatedAt": "2026-05-22T18:50:16.918Z"
+  },
+  {
+    "id": "946d5dec-6947-4aa2-81af-f504ceba402d",
+    "branch": "main",
+    "commitMessage": "change file",
+    "commitSha": "b0a5097e70df3219b3767a627b02b331edd34136",
+    "changedFiles": [
+      "backend/data/deployments.json",
+      "sample-app/index.js"
+    ],
+    "changedFilesCount": 2,
+    "buildId": "build-14",
+    "status": "deployed",
+    "safetyLabel": "Safe",
+    "dockerfileChanged": false,
+    "configFilesChanged": false,
+    "createdAt": "2026-05-22T18:54:42.010Z",
+    "updatedAt": "2026-05-22T18:55:19.597Z",
+    "deployedAt": "2026-05-22T18:55:19.597Z"
   }
 ]
