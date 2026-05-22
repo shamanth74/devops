@@ -201,5 +201,29 @@
     "createdAt": "2026-05-22T18:20:21.871Z",
     "updatedAt": "2026-05-22T18:20:33.673Z",
     "deployedAt": "2026-05-22T18:20:33.673Z"
+  },
+  {
+    "id": "90ec122d-4fd5-4f88-848f-43f53de980f8",
+    "branch": "main",
+    "commitMessage": "change-1",
+    "commitSha": "6684f19993589be1bf30bf480266b6d7fa71f1ad",
+    "changedFiles": [
+      ".github/workflows/deploy.yml",
+      "README.md",
+      "backend/data/deployments.json",
+      "backend/server.js",
+      "docker-compose.yml",
+      "sample-app/Dockerfile",
+      "sample-app/index.js",
+      "scripts/deploy.sh"
+    ],
+    "changedFilesCount": 8,
+    "buildId": "build-11",
+    "status": "approved",
+    "safetyLabel": "High Impact",
+    "dockerfileChanged": true,
+    "configFilesChanged": true,
+    "createdAt": "2026-05-22T18:39:32.131Z",
+    "updatedAt": "2026-05-22T18:40:02.794Z"
   }
 ]

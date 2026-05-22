@@ -304,16 +304,19 @@ app.put('/api/deployments/:id/deploy', (req, res) => {
   console.log(`   Build  : ${deployment.buildId}`);
   console.log(`   Commit : ${deployment.commitSha}`);
 
-  const scriptPath = path.join(__dirname, '..', 'scripts', 'deploy.sh');
+  // Run docker-compose directly from the project root (works on Windows + Linux)
+  const projectRoot = path.join(__dirname, '..');
+  const cmd = 'docker-compose stop sample-app && docker-compose up -d --build sample-app';
 
-  execFile('bash', [scriptPath], (error, stdout, stderr) => {
+  const { exec } = require('child_process');
+  exec(cmd, { cwd: projectRoot }, (error, stdout, stderr) => {
     const logs = stdout + (stderr ? '\n' + stderr : '');
     console.log(logs);
 
     if (error) {
-      console.error('❌ Deployment script failed:', error);
+      console.error('❌ Deployment failed:', error.message);
       return res.status(500).json({
-        error: 'Deployment script failed',
+        error: 'Deployment failed',
         logs: logs,
       });
     }

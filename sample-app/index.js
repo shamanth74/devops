@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
       <div class="card">
         <h1>🚀 Sample App</h1>
         <p>Sample App Successfully Deployed</p>
-        <span class="version">v1.1.3</span>
+        <span class="version">v1.1.2</span>
       </div>
     </body>
     </html>
