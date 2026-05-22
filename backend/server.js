@@ -234,7 +234,7 @@ app.post('/api/deployments', (req, res) => {
 });
 
 // ---------- PUT /api/deployments/:id/approve ----------
-// Approve a pending deployment.
+// Approve and deploy a pending deployment in one step.
 app.put('/api/deployments/:id/approve', (req, res) => {
   const deployments = loadDeployments();
   const deployment = deployments.find((d) => d.id === req.params.id);
@@ -249,13 +249,48 @@ app.put('/api/deployments/:id/approve', (req, res) => {
     });
   }
 
-  // Update status
+  // Mark as approved first
   deployment.status = 'approved';
   deployment.updatedAt = new Date().toISOString();
   saveDeployments(deployments);
-
   console.log(`👍 Deployment approved: ${deployment.id}`);
-  res.json(deployment);
+
+  // Now trigger local Docker deployment
+  console.log('🐳 Starting local Docker deployment...');
+  console.log(`   Branch : ${deployment.branch}`);
+  console.log(`   Build  : ${deployment.buildId}`);
+  console.log(`   Commit : ${deployment.commitSha}`);
+
+  const projectRoot = path.join(__dirname, '..');
+  const cmd = 'docker-compose stop sample-app && docker-compose up -d --build sample-app';
+
+  const { exec } = require('child_process');
+  exec(cmd, { cwd: projectRoot }, (error, stdout, stderr) => {
+    const logs = stdout + (stderr ? '\n' + stderr : '');
+    console.log(logs);
+
+    if (error) {
+      console.error('❌ Deployment failed:', error.message);
+      return res.status(500).json({
+        error: 'Deployment failed',
+        logs: logs,
+      });
+    }
+
+    // Update status to deployed on success
+    const now = new Date().toISOString();
+    deployment.status = 'deployed';
+    deployment.deployedAt = now;
+    deployment.updatedAt = now;
+    saveDeployments(deployments);
+
+    console.log(`🚀 Deployment deployed: ${deployment.id}`);
+    res.json({
+      message: 'Deployment successful',
+      logs: logs,
+      deployment: deployment,
+    });
+  });
 });
 
 // ---------- PUT /api/deployments/:id/reject ----------
@@ -281,60 +316,6 @@ app.put('/api/deployments/:id/reject', (req, res) => {
 
   console.log(`❌ Deployment rejected: ${deployment.id}`);
   res.json(deployment);
-});
-
-// ---------- PUT /api/deployments/:id/deploy ----------
-// Deploy an approved deployment (simulated).
-app.put('/api/deployments/:id/deploy', (req, res) => {
-  const deployments = loadDeployments();
-  const deployment = deployments.find((d) => d.id === req.params.id);
-
-  if (!deployment) {
-    return res.status(404).json({ error: 'Deployment not found' });
-  }
-
-  if (deployment.status !== 'approved') {
-    return res.status(400).json({
-      error: `Cannot deploy a deployment that is currently "${deployment.status}". Only approved deployments can be deployed.`,
-    });
-  }
-
-  console.log('🐳 Starting local Docker deployment...');
-  console.log(`   Branch : ${deployment.branch}`);
-  console.log(`   Build  : ${deployment.buildId}`);
-  console.log(`   Commit : ${deployment.commitSha}`);
-
-  // Run docker-compose directly from the project root (works on Windows + Linux)
-  const projectRoot = path.join(__dirname, '..');
-  const cmd = 'docker-compose stop sample-app && docker-compose up -d --build sample-app';
-
-  const { exec } = require('child_process');
-  exec(cmd, { cwd: projectRoot }, (error, stdout, stderr) => {
-    const logs = stdout + (stderr ? '\n' + stderr : '');
-    console.log(logs);
-
-    if (error) {
-      console.error('❌ Deployment failed:', error.message);
-      return res.status(500).json({
-        error: 'Deployment failed',
-        logs: logs,
-      });
-    }
-
-    // Update status on success
-    const now = new Date().toISOString();
-    deployment.status = 'deployed';
-    deployment.deployedAt = now;
-    deployment.updatedAt = now;
-    saveDeployments(deployments);
-
-    console.log(`🚀 Deployment deployed: ${deployment.id}`);
-    res.json({
-      message: 'Deployment successful',
-      logs: logs,
-      deployment: deployment,
-    });
-  });
 });
 
 // ------------------------------------------------------------

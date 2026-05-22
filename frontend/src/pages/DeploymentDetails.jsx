@@ -235,7 +235,7 @@ function DeploymentDetails() {
                 onClick={handleApprove}
                 className="px-5 py-2 text-sm font-medium rounded-lg bg-green-600 hover:bg-green-500 text-white transition-colors cursor-pointer"
               >
-                ✓ Approve
+                ✓ Approve & Deploy
               </button>
               <button
                 onClick={handleReject}
@@ -244,14 +244,6 @@ function DeploymentDetails() {
                 ✕ Reject
               </button>
             </>
-          )}
-          {status === 'approved' && (
-            <button
-              onClick={handleDeploy}
-              className="px-5 py-2 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer"
-            >
-              🚀 Deploy
-            </button>
           )}
         </div>
       </div>

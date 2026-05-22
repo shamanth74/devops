@@ -82,16 +82,7 @@ function DeploymentCard({ deployment, onApprove, onReject, onDeploy }) {
           </Link>
         )}
 
-        {status === 'approved' && (
-          <button
-            onClick={() => onDeploy(id)}
-            className="flex-1 px-3 py-1.5 text-sm font-medium rounded-lg bg-blue-600 hover:bg-blue-500 text-white transition-colors cursor-pointer"
-          >
-            🚀 Deploy
-          </button>
-        )}
-
-        {(status === 'rejected' || status === 'deployed') && (
+        {(status === 'approved' || status === 'rejected' || status === 'deployed') && (
           <Link
             to={`/deployment/${id}`}
             className="flex-1 text-center px-3 py-1.5 text-sm font-medium rounded-lg bg-gray-800 hover:bg-gray-700 text-gray-300 transition-colors"

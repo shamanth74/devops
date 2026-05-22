@@ -81,10 +81,11 @@ jobs:
           echo "id=$DEPLOY_ID" >> $GITHUB_OUTPUT
           echo "✅ Deployment request created: $DEPLOY_ID"
 
-      # --- Step 8: Wait for admin approval ---
+      # --- Step 8: Wait for admin to Approve & Deploy ---
       # The pipeline PAUSES here and polls every 10 seconds.
-      # An admin must open the dashboard and click Approve or Reject.
-      - name: ⏳ Waiting for Admin Approval
+      # When the admin clicks "Approve & Deploy", the backend approves
+      # and runs docker-compose locally, then sets status to "deployed".
+      - name: ⏳ Waiting for Admin Approval & Deployment
         run: |
           echo "============================================"
           echo "  ⏳ WAITING FOR ADMIN APPROVAL"
@@ -92,7 +93,7 @@ jobs:
           echo "  Deployment ID: ${{ steps.deploy_request.outputs.id }}"
           echo "============================================"
           echo ""
-          echo "Open the dashboard and click Approve or Reject."
+          echo "Open the dashboard and click Approve & Deploy or Reject."
           echo "Polling every 10 seconds (timeout: 10 minutes)..."
           echo ""
 
@@ -100,9 +101,14 @@ jobs:
             STATUS=$(curl -sf "${{ vars.API_URL }}/api/deployments/${{ steps.deploy_request.outputs.id }}" | jq -r '.status')
             echo "  Poll #$i — Status: $STATUS"
 
-            if [ "$STATUS" = "approved" ]; then
+            if [ "$STATUS" = "deployed" ]; then
               echo ""
-              echo "✅ Deployment APPROVED by admin!"
+              echo "============================================"
+              echo "  ✅ Deployment completed successfully"
+              echo "  Build: build-${{ github.run_number }}"
+              echo "  Branch: ${{ github.ref_name }}"
+              echo "  Commit: ${{ github.sha }}"
+              echo "============================================"
               exit 0
             elif [ "$STATUS" = "rejected" ]; then
               echo ""
@@ -116,22 +122,3 @@ jobs:
           echo "⏰ Approval timed out after 10 minutes."
           exit 1
 
-      # --- Step 9: Deploy (run local script via backend) ---
-      # This only runs if approved (Step 8 exited 0)
-      - name: 🚀 Deploy
-        run: |
-          echo "🚀 Triggering local deployment script..."
-          
-          RESPONSE=$(curl -sf -X PUT "${{ vars.API_URL }}/api/deployments/${{ steps.deploy_request.outputs.id }}/deploy")
-          
-          # Print the logs returned from the backend deployment script
-          echo "============================================"
-          echo "  🐳 DOCKER DEPLOYMENT LOGS"
-          echo "============================================"
-          echo "$RESPONSE" | jq -r '.logs'
-          echo "============================================"
-          
-          echo "✅ Deployment completed successfully"
-          echo "  Build: build-${{ github.run_number }}"
-          echo "  Branch: ${{ github.ref_name }}"
-          echo "  Commit: ${{ github.sha }}"
