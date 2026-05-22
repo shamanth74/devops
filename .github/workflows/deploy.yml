@@ -12,6 +12,8 @@ name: CI/CD Deployment Pipeline
 on:
   push:
     branches: [main]
+    paths:
+      - 'sample-app/**'
 
 jobs:
   build-and-deploy:
