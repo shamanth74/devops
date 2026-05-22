@@ -1,3 +1,12 @@
+# ============================================
+# CI/CD Deployment Pipeline — REAL WORKFLOW
+# ============================================
+# This pipeline runs when code is pushed to main.
+# It builds the app, creates a deployment request,
+# waits for admin approval on the dashboard,
+# then deploys if approved.
+# ============================================
+
 name: CI/CD Deployment Pipeline
 
 on:
@@ -5,91 +14,115 @@ on:
     branches: [main]
 
 jobs:
-  build-and-request-deploy:
+  build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
+      # --- Step 1: Checkout the code ---
       - name: Checkout Code
         uses: actions/checkout@v4
         with:
-          fetch-depth: 2
+          fetch-depth: 2  # Need 2 commits to compute diff
 
+      # --- Step 2: Setup Node.js ---
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
           node-version: '20'
 
-      - name: Install Backend Dependencies
-        working-directory: ./backend
+      # --- Step 3: Install and build the sample app ---
+      - name: Install Sample App Dependencies
+        working-directory: ./sample-app
         run: npm install
 
-      - name: Install Frontend Dependencies
-        working-directory: ./frontend
-        run: npm install
+      # --- Step 4: Build Docker image for the sample app ---
+      - name: Build Docker Image
+        run: docker build -t sample-app:latest ./sample-app
 
-      - name: Build Frontend
-        working-directory: ./frontend
-        run: npm run build
-
-      - name: Build Docker Images
-        run: docker-compose build
-
+      # --- Step 5: Get the list of changed files ---
       - name: Get Changed Files
         id: changes
         run: |
-          FILES=$(git diff --name-only HEAD~1 HEAD | jq -R -s -c 'split("\n") | map(select(length > 0))')
+          FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '["unknown"]')
           echo "files=$FILES" >> $GITHUB_OUTPUT
+          echo "Changed files: $FILES"
 
+      # --- Step 6: Get commit info ---
       - name: Get Commit Info
         id: commit
         run: |
           echo "sha=${{ github.sha }}" >> $GITHUB_OUTPUT
-          echo "message=$(git log -1 --pretty=%B | head -1)" >> $GITHUB_OUTPUT
+          MSG=$(git log -1 --pretty=%B | head -1)
+          echo "message=$MSG" >> $GITHUB_OUTPUT
           echo "branch=${{ github.ref_name }}" >> $GITHUB_OUTPUT
 
+      # --- Step 7: Create deployment request on the approval dashboard ---
       - name: Create Deployment Request
         id: deploy_request
-        env:
-          API_URL: ${{ vars.API_URL || 'http://localhost:5000' }}
         run: |
-          RESPONSE=$(curl -s -X POST "$API_URL/api/deployments" \
+          echo "🚀 Creating deployment request..."
+          echo "API URL: ${{ vars.API_URL }}"
+
+          RESPONSE=$(curl -sf -X POST "${{ vars.API_URL }}/api/deployments" \
             -H "Content-Type: application/json" \
-            -d '{
-              "branch": "${{ steps.commit.outputs.branch }}",
-              "commitMessage": "${{ steps.commit.outputs.message }}",
-              "commitSha": "${{ steps.commit.outputs.sha }}",
-              "changedFiles": ${{ steps.changes.outputs.files }},
-              "buildId": "build-${{ github.run_number }}"
-            }')
-          echo "Deployment request created: $RESPONSE"
+            -d "{
+              \"branch\": \"${{ steps.commit.outputs.branch }}\",
+              \"commitMessage\": \"${{ steps.commit.outputs.message }}\",
+              \"commitSha\": \"${{ steps.commit.outputs.sha }}\",
+              \"changedFiles\": ${{ steps.changes.outputs.files }},
+              \"buildId\": \"build-${{ github.run_number }}\"
+            }")
+
+          echo "Response: $RESPONSE"
           DEPLOY_ID=$(echo $RESPONSE | jq -r '.id')
           echo "id=$DEPLOY_ID" >> $GITHUB_OUTPUT
+          echo "✅ Deployment request created: $DEPLOY_ID"
 
-      - name: Wait for Approval
-        env:
-          API_URL: ${{ vars.API_URL || 'http://localhost:5000' }}
+      # --- Step 8: Wait for admin approval ---
+      # The pipeline PAUSES here and polls every 10 seconds.
+      # An admin must open the dashboard and click Approve or Reject.
+      - name: ⏳ Waiting for Admin Approval
         run: |
-          echo "Waiting for deployment approval..."
-          echo "Approve at: $API_URL (Dashboard)"
+          echo "============================================"
+          echo "  ⏳ WAITING FOR ADMIN APPROVAL"
+          echo "  Dashboard: ${{ vars.API_URL }}"
+          echo "  Deployment ID: ${{ steps.deploy_request.outputs.id }}"
+          echo "============================================"
+          echo ""
+          echo "Open the dashboard and click Approve or Reject."
+          echo "Polling every 10 seconds (timeout: 10 minutes)..."
+          echo ""
+
           for i in $(seq 1 60); do
-            STATUS=$(curl -s "$API_URL/api/deployments/${{ steps.deploy_request.outputs.id }}" | jq -r '.status')
-            echo "Attempt $i: Status = $STATUS"
+            STATUS=$(curl -sf "${{ vars.API_URL }}/api/deployments/${{ steps.deploy_request.outputs.id }}" | jq -r '.status')
+            echo "  Poll #$i — Status: $STATUS"
+
             if [ "$STATUS" = "approved" ]; then
-              echo "Deployment approved!"
+              echo ""
+              echo "✅ Deployment APPROVED by admin!"
               exit 0
             elif [ "$STATUS" = "rejected" ]; then
-              echo "Deployment rejected."
+              echo ""
+              echo "❌ Deployment REJECTED by admin."
               exit 1
             fi
+
             sleep 10
           done
-          echo "Approval timeout after 10 minutes."
+
+          echo "⏰ Approval timed out after 10 minutes."
           exit 1
 
-      - name: Deploy Container
-        env:
-          API_URL: ${{ vars.API_URL || 'http://localhost:5000' }}
+      # --- Step 9: Deploy (mark as deployed) ---
+      # This only runs if approved (Step 8 exited 0)
+      - name: 🚀 Deploy
         run: |
-          curl -s -X PUT "$API_URL/api/deployments/${{ steps.deploy_request.outputs.id }}/deploy"
-          docker-compose up -d
-          echo "Deployment complete!"
+          echo "🚀 Deploying..."
+          curl -sf -X PUT "${{ vars.API_URL }}/api/deployments/${{ steps.deploy_request.outputs.id }}/deploy"
+          echo ""
+          echo "============================================"
+          echo "  ✅ DEPLOYMENT SUCCESSFUL"
+          echo "  Build: build-${{ github.run_number }}"
+          echo "  Branch: ${{ github.ref_name }}"
+          echo "  Commit: ${{ github.sha }}"
+          echo "============================================"

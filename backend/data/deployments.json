@@ -32,11 +32,12 @@
     ],
     "changedFilesCount": 4,
     "buildId": "build-43",
-    "status": "pending",
+    "status": "deployed",
     "safetyLabel": "Needs Review",
     "dockerfileChanged": true,
     "configFilesChanged": true,
     "createdAt": "2026-05-22T13:18:28.074Z",
-    "updatedAt": "2026-05-22T13:18:28.074Z"
+    "updatedAt": "2026-05-22T17:03:14.011Z",
+    "deployedAt": "2026-05-22T17:03:14.011Z"
   }
 ]

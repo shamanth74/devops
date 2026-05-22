@@ -1,6 +1,7 @@
 version: '3.8'
 
 services:
+  # --- Approval System Backend (API) ---
   backend:
     build: ./backend
     container_name: cicd-backend
@@ -13,6 +14,7 @@ services:
       - PORT=5000
     restart: unless-stopped
 
+  # --- Approval System Frontend (Dashboard) ---
   frontend:
     build: ./frontend
     container_name: cicd-frontend
@@ -20,4 +22,14 @@ services:
       - '3000:80'
     depends_on:
       - backend
+    restart: unless-stopped
+
+  # --- Sample App (deployed after approval) ---
+  sample-app:
+    build: ./sample-app
+    container_name: sample-app
+    ports:
+      - '8080:8080'
+    environment:
+      - PORT=8080
     restart: unless-stopped
