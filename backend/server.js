@@ -78,6 +78,7 @@ const CONFIG_PATTERNS = [
   '.env',
   'docker-compose.yml',
   'Dockerfile',
+  'package.json',
 ];
 
 // These are checked as file-ending patterns (like globs).
@@ -113,19 +114,20 @@ function isConfigFile(fileName) {
 
 /**
  * Compute a human-readable safety label for a deployment based on
- * which files were changed.
+ * which files were changed and how many lines were modified.
  *
  * Rules (evaluated in order):
- *   1. > 20 changed files          → "High Impact"
+ *   1. > 3 lines changed            → "High Impact"
  *   2. Any config/sensitive file    → "Needs Review"
  *   3. Otherwise                    → "Safe"
  *
  * @param {string[]} changedFiles - List of changed file paths.
+ * @param {number} linesChanged - Number of lines changed.
  * @returns {string} One of "High Impact", "Needs Review", or "Safe".
  */
-function computeSafetyLabel(changedFiles) {
-  // Rule 1 — lots of files changed
-  if (changedFiles.length > 20) {
+function computeSafetyLabel(changedFiles, linesChanged) {
+  // Rule 1 — too many lines changed
+  if (linesChanged > 3) {
     return 'High Impact';
   }
 
@@ -188,7 +190,7 @@ app.get('/api/deployments/:id', (req, res) => {
 // Create a new deployment request.
 // Required body fields: branch, commitMessage, commitSha, changedFiles, buildId
 app.post('/api/deployments', (req, res) => {
-  const { branch, commitMessage, commitSha, changedFiles, buildId } = req.body;
+  const { branch, commitMessage, commitSha, changedFiles, buildId, linesChanged } = req.body;
 
   // --- Basic validation ---
   if (!branch || !commitMessage || !commitSha || !changedFiles || !buildId) {
@@ -213,7 +215,7 @@ app.post('/api/deployments', (req, res) => {
     changedFilesCount: changedFiles.length,                 // Handy count
     buildId,                                               // CI build identifier
     status: 'pending',                                     // Starts as pending
-    safetyLabel: computeSafetyLabel(changedFiles),         // Computed risk label
+    safetyLabel: computeSafetyLabel(changedFiles, linesChanged || 0), // Computed risk label
     dockerfileChanged: changedFiles.some(                  // Did the Dockerfile change?
       (f) => path.basename(f).toLowerCase() === 'dockerfile'
     ),

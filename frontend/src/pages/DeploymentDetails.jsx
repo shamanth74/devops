@@ -159,13 +159,21 @@ function DeploymentDetails() {
             Change Summary
           </h2>
 
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-4">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4 mb-4">
             {/* Total changed files */}
             <div className="bg-gray-800/50 rounded-lg p-3 text-center">
               <p className="text-2xl font-bold text-white">
                 {changedFilesCount ?? 0}
               </p>
               <p className="text-xs text-gray-500 mt-1">Changed Files</p>
+            </div>
+
+            {/* Total lines changed */}
+            <div className="bg-gray-800/50 rounded-lg p-3 text-center">
+              <p className="text-2xl font-bold text-white">
+                {deployment.linesChanged ?? 0}
+              </p>
+              <p className="text-xs text-gray-500 mt-1">Lines Changed</p>
             </div>
 
             {/* Dockerfile changed */}

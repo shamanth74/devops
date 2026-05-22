@@ -47,7 +47,12 @@ jobs:
         run: |
           FILES=$(git diff --name-only HEAD~1 HEAD 2>/dev/null | jq -R -s -c 'split("\n") | map(select(length > 0))' || echo '["unknown"]')
           echo "files=$FILES" >> $GITHUB_OUTPUT
+          
+          LINES=$(git diff --numstat HEAD~1 HEAD 2>/dev/null | awk '{s+=$1+$2} END {if(s=="")print 0; else print s}')
+          if [ -z "$LINES" ]; then LINES=0; fi
+          echo "lines=$LINES" >> $GITHUB_OUTPUT
           echo "Changed files: $FILES"
+          echo "Lines changed: $LINES"
 
       # --- Step 6: Get commit info ---
       - name: Get Commit Info
@@ -65,12 +70,13 @@ jobs:
           MSG: ${{ steps.commit.outputs.message }}
           SHA: ${{ steps.commit.outputs.sha }}
           FILES: ${{ steps.changes.outputs.files }}
+          LINES: ${{ steps.changes.outputs.lines }}
           BUILD_ID: build-${{ github.run_number }}
         run: |
           echo "🚀 Creating deployment request..."
           echo "API URL: ${{ vars.API_URL }}"
 
-          PAYLOAD=$(jq -n '{branch: env.BRANCH, commitMessage: env.MSG, commitSha: env.SHA, changedFiles: (env.FILES | fromjson), buildId: env.BUILD_ID}')
+          PAYLOAD=$(jq -n '{branch: env.BRANCH, commitMessage: env.MSG, commitSha: env.SHA, changedFiles: (env.FILES | fromjson), linesChanged: (env.LINES | tonumber), buildId: env.BUILD_ID}')
 
           RESPONSE=$(curl -sf -X POST "${{ vars.API_URL }}/api/deployments" \
             -H "Content-Type: application/json" \

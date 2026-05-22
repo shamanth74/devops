@@ -74,20 +74,12 @@ function DeploymentCard({ deployment, onApprove, onReject, onDeploy }) {
       {/* Footer — Action buttons */}
       <div className="flex items-center gap-2 mt-auto pt-3 border-t border-gray-800">
         {status === 'pending' && (
-          <>
-            <button
-              onClick={() => onApprove(id)}
-              className="flex-1 px-3 py-1.5 text-sm font-medium rounded-lg bg-green-600 hover:bg-green-500 text-white transition-colors cursor-pointer"
-            >
-              ✓ Approve
-            </button>
-            <button
-              onClick={() => onReject(id)}
-              className="flex-1 px-3 py-1.5 text-sm font-medium rounded-lg bg-red-600 hover:bg-red-500 text-white transition-colors cursor-pointer"
-            >
-              ✕ Reject
-            </button>
-          </>
+          <Link
+            to={`/deployment/${id}`}
+            className="flex-1 text-center px-3 py-1.5 text-sm font-medium rounded-lg bg-yellow-600 hover:bg-yellow-500 text-white transition-colors"
+          >
+            Review Details
+          </Link>
         )}
 
         {status === 'approved' && (
