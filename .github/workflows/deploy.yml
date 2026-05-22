@@ -116,16 +116,22 @@ jobs:
           echo "⏰ Approval timed out after 10 minutes."
           exit 1
 
-      # --- Step 9: Deploy (mark as deployed) ---
+      # --- Step 9: Deploy (run local script via backend) ---
       # This only runs if approved (Step 8 exited 0)
       - name: 🚀 Deploy
         run: |
-          echo "🚀 Deploying..."
-          curl -sf -X PUT "${{ vars.API_URL }}/api/deployments/${{ steps.deploy_request.outputs.id }}/deploy"
-          echo ""
+          echo "🚀 Triggering local deployment script..."
+          
+          RESPONSE=$(curl -sf -X PUT "${{ vars.API_URL }}/api/deployments/${{ steps.deploy_request.outputs.id }}/deploy")
+          
+          # Print the logs returned from the backend deployment script
           echo "============================================"
-          echo "  ✅ DEPLOYMENT SUCCESSFUL"
+          echo "  🐳 DOCKER DEPLOYMENT LOGS"
+          echo "============================================"
+          echo "$RESPONSE" | jq -r '.logs'
+          echo "============================================"
+          
+          echo "✅ Deployment completed successfully"
           echo "  Build: build-${{ github.run_number }}"
           echo "  Branch: ${{ github.ref_name }}"
           echo "  Commit: ${{ github.sha }}"
-          echo "============================================"

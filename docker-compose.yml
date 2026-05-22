@@ -29,7 +29,7 @@ services:
     build: ./sample-app
     container_name: sample-app
     ports:
-      - '8080:8080'
+      - '9090:9090'
     environment:
-      - PORT=8080
+      - PORT=9090
     restart: unless-stopped

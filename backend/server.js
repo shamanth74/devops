@@ -10,6 +10,7 @@ const cors = require('cors');
 const fs = require('fs');
 const path = require('path');
 const { v4: uuidv4 } = require('uuid');
+const { execFile } = require('child_process');
 
 // ------------------------------------------------------------
 // 1. App & Middleware Setup
@@ -298,21 +299,39 @@ app.put('/api/deployments/:id/deploy', (req, res) => {
     });
   }
 
-  // Simulate the actual deploy step
-  console.log('🐳 Simulating docker-compose up -d...');
+  console.log('🐳 Starting local Docker deployment...');
   console.log(`   Branch : ${deployment.branch}`);
   console.log(`   Build  : ${deployment.buildId}`);
   console.log(`   Commit : ${deployment.commitSha}`);
 
-  // Update status
-  const now = new Date().toISOString();
-  deployment.status = 'deployed';
-  deployment.deployedAt = now;
-  deployment.updatedAt = now;
-  saveDeployments(deployments);
+  const scriptPath = path.join(__dirname, '..', 'scripts', 'deploy.sh');
 
-  console.log(`🚀 Deployment deployed: ${deployment.id}`);
-  res.json(deployment);
+  execFile('bash', [scriptPath], (error, stdout, stderr) => {
+    const logs = stdout + (stderr ? '\n' + stderr : '');
+    console.log(logs);
+
+    if (error) {
+      console.error('❌ Deployment script failed:', error);
+      return res.status(500).json({
+        error: 'Deployment script failed',
+        logs: logs,
+      });
+    }
+
+    // Update status on success
+    const now = new Date().toISOString();
+    deployment.status = 'deployed';
+    deployment.deployedAt = now;
+    deployment.updatedAt = now;
+    saveDeployments(deployments);
+
+    console.log(`🚀 Deployment deployed: ${deployment.id}`);
+    res.json({
+      message: 'Deployment successful',
+      logs: logs,
+      deployment: deployment,
+    });
+  });
 });
 
 // ------------------------------------------------------------

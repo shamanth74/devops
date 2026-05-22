@@ -8,7 +8,7 @@
 
 const express = require('express');
 const app = express();
-const PORT = process.env.PORT || 8080;
+const PORT = process.env.PORT || 9090;
 
 // --- Main route ---
 app.get('/', (req, res) => {
@@ -28,10 +28,8 @@ app.get('/', (req, res) => {
     <body>
       <div class="card">
         <h1>🚀 Sample App</h1>
-        <p>This app was deployed via the CI/CD Approval System</p>
-        <span class="version">v1.0.4
-        
-        </span>
+        <p>Sample App Successfully Deployed</p>
+        <span class="version">v1.1.3</span>
       </div>
     </body>
     </html>

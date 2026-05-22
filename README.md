@@ -138,13 +138,29 @@ Go to your repo → **Actions** tab. You'll see the pipeline running. It will pa
 
 ### 4. Approve on Dashboard
 
-Open **http://localhost:3000** — the deployment request is there! Click **Approve**.
+Open **http://localhost:3000** — the deployment request is there! Click **Review Details**, and then **Approve**.
 
-### 5. Watch GitHub Actions Succeed
+### 5. Watch the Local Deployment Happen
 
-The pipeline detects the approval, marks the deployment as deployed, and shows ✅ **SUCCESS**.
+Once approved:
+1. GitHub Actions sends a deploy signal to your local backend.
+2. Your local backend executes `scripts/deploy.sh`.
+3. The sample-app Docker container is automatically rebuilt and restarted on your machine.
+4. GitHub Actions shows ✅ **SUCCESS** and prints the Docker build logs.
 
-*If you click Reject instead, the pipeline shows ❌ **FAILURE**.*
+*If you click Reject instead, the pipeline shows ❌ **FAILURE** and no deployment happens.*
+
+### 6. View the Live App
+
+Open your browser to: **http://localhost:9090**
+You should see your newly deployed sample app changes live!
+
+## 🔧 Troubleshooting Local Deployments
+
+If the deployment succeeds in the dashboard but you can't reach the app on port 9090:
+- Ensure Docker Desktop is running on your machine.
+- Check the backend logs (`npm start` terminal) to see if `docker-compose` threw an error.
+- Check if port 9090 is blocked or already in use by another application.
 
 ## 📡 API Reference
 

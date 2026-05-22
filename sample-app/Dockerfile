@@ -3,7 +3,7 @@ WORKDIR /app
 COPY package*.json ./
 RUN npm install --production
 COPY . .
-EXPOSE 8080
-CMD ["node", "index.jsh"]
+EXPOSE 9090
+CMD ["node", "index.js"]
 
 
