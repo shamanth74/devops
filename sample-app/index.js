@@ -29,7 +29,7 @@ app.get('/', (req, res) => {
       <div class="card">
         <h1>🚀 Sample App</h1>
         <p>This app was deployed via the CI/CD Approval System</p>
-        <span class="version">v1.0.0</span>
+        <span class="version">v1.0.1</span>
       </div>
     </body>
     </html>
